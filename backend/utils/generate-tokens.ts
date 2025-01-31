@@ -37,6 +37,29 @@ export const storeRefreshToken = async (
   ); // 7days
 };
 
+// export const setCookies = (
+//   res: Response,
+//   accessToken: string,
+//   refreshToken: string
+// ) => {
+//   res.cookie("accessToken", accessToken, {
+//     httpOnly: true,
+//     secure: false,
+//     sameSite: "lax",
+//     maxAge: 15 * 60 * 1000,
+//     domain: "localhost", // Explicitly set domain
+//     path: "/", // Explicitly set path
+//   });
+//   res.cookie("refreshToken", refreshToken, {
+//     httpOnly: true,
+//     secure: false,
+//     sameSite: "lax",
+//     maxAge: 7 * 24 * 60 * 60 * 1000,
+//     domain: "localhost", // Explicitly set domain
+//     path: "/", // Explicitly set path
+//   });
+// };
+
 export const setCookies = (
   res: Response,
   accessToken: string,

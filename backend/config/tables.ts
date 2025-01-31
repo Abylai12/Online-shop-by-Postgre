@@ -180,3 +180,9 @@
 //     created_at TIMESTAMP DEFAULT current_timestamp,
 //     updated_at TIMESTAMP DEFAULT current_timestamp
 // );
+// CREATE TABLE user_carts (
+//     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+//     user_id UUID REFERENCES users(id),
+//     product_id UUID REFERENCES products(id),
+//     added_at TIMESTAMP DEFAULT current_timestamp
+// );

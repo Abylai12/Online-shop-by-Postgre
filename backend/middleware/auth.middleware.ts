@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import { sql } from "../config/connect-to-tb";
-import { User } from "../types/user-type";
+import { User } from "../types/types";
+
+import { decodeToken } from "../utils/decode-token";
 
 declare global {
   namespace Express {
@@ -19,40 +20,28 @@ export const protectRoute = async (
     const accessToken = req.cookies.accessToken;
 
     if (!accessToken) {
-      return res
+      res
         .status(401)
         .json({ message: "Unauthorized - No access token provided" });
+      return;
     }
 
-    try {
-      const userId = jwt.verify(
-        accessToken,
-        process.env.ACCESS_TOKEN_SECRET || ""
-      );
-      const [user] = await sql`SELECT name, email, role FROM users WHERE id=${
-        userId as string
-      } `;
+    const userId = decodeToken(accessToken);
 
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
+    const [user] = await sql`SELECT id, name, email, role FROM users WHERE id=${
+      userId as string
+    } `;
 
-      req.user = user as User;
-
-      next();
-    } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        return res
-          .status(401)
-          .json({ message: "Unauthorized - Access token expired" });
-      }
-      throw error;
+    if (!user) {
+      throw new Error("User not found");
     }
-  } catch (error) {
+
+    req.user = user as User;
+
+    next();
+  } catch (error: any) {
     console.log("Error in protectRoute middleware", error.message);
-    return res
-      .status(401)
-      .json({ message: "Unauthorized - Invalid access token" });
+    res.status(401).json({ error });
   }
 };
 
@@ -60,6 +49,6 @@ export const adminRoute = (req: Request, res: Response, next: NextFunction) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
-    return res.status(403).json({ message: "Access denied - Admin only" });
+    res.status(403).json({ message: "Access denied - Admin only" });
   }
 };
