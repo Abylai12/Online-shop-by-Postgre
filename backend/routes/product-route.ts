@@ -12,12 +12,12 @@ import {
 
 const router = Router();
 
-router.route("/").get(protectRoute, adminRoute, getAllProducts);
+router.route("/").get(protectRoute, getAllProducts);
 router.route("/featured").get(getFeaturedProducts);
 router.route("/category/:category").get(getProductsByCategory);
 router.route("/recommendations").get(getRecommendedProducts);
-router.route("/").post(protectRoute, adminRoute, createProduct);
-router.route("/:id").patch(protectRoute, adminRoute, toggleFeaturedProduct);
-router.route("/:id").delete(protectRoute, adminRoute, deleteProduct);
+router.route("/").post(protectRoute, createProduct);
+router.route("/:id").patch(protectRoute, toggleFeaturedProduct);
+router.route("/:id").delete(protectRoute, deleteProduct);
 
 export default router;

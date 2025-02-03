@@ -3,12 +3,11 @@
 import { BarChart, PlusCircle, ShoppingBasket } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import CreateProductForm from "@/components/admin/CreateProductForm";
 import axios from "axios";
-import { toast } from "react-toastify";
 import { Products } from "@/utils/types";
 import ProductsList from "@/components/admin/ProductList";
 import { apiURL } from "@/utils/apiURL";
+import CreateProductForm from "@/components/admin/CreateProductForm";
 
 const tabs = [
   { id: "create", label: "Create Product", icon: PlusCircle },
@@ -17,28 +16,28 @@ const tabs = [
 ];
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState("create");
+  const [activeTab, setActiveTab] = useState("products");
   const [products, setProducts] = useState<Products[]>([]);
-
+  const [refetch, setRefetch] = useState(false);
   const fetchAllProducts = async () => {
     try {
       const res = await axios.get(`${apiURL}/products`, {
         withCredentials: true,
       });
       if (res.status === 200) {
-        setProducts(res.data);
+        setProducts(res.data.products);
       }
     } catch (error) {
-      toast.error("Failed to fetch products");
+      console.error(error);
     }
   };
 
   useEffect(() => {
     fetchAllProducts();
-  }, [fetchAllProducts]);
+  }, [refetch]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden ">
       <div className="relative z-10 container mx-auto px-4 py-16">
         <motion.h1
           className="text-4xl font-bold mb-8 text-emerald-400 text-center"
@@ -65,8 +64,15 @@ const AdminPage = () => {
             </button>
           ))}
         </div>
-        {activeTab === "create" && <CreateProductForm />}
-        {activeTab === "products" && <ProductsList products={products} />}
+        {activeTab === "create" && (
+          <CreateProductForm
+            setRefetch={setRefetch}
+            setActiveTab={setActiveTab}
+          />
+        )}
+        {activeTab === "products" && (
+          <ProductsList products={products} setRefetch={setRefetch} />
+        )}
         {/* {activeTab === "analytics" && <AnalyticsTab />} */}
       </div>
     </div>

@@ -1,108 +1,84 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Upload, Loader } from "lucide-react";
-import { Category, InputProduct } from "@/utils/types";
+import { PlusCircle, Loader } from "lucide-react";
+import { InputProduct, InputSize } from "@/utils/types";
+import ImageInput from "./ImageInput";
+import ProductForm from "./ProductForm";
+import axiosInstance from "@/utils/axios-instance";
 import { toast } from "react-toastify";
-import axios from "axios";
-import { apiURL } from "@/utils/apiURL";
+import { handleImageUpload } from "@/utils/handle-upload-image";
+import SizeInputForm from "./SizeInputForm";
 
-const CreateProductForm = () => {
+type CreateProductProp = {
+  setRefetch: Dispatch<SetStateAction<boolean>>;
+  setActiveTab: Dispatch<SetStateAction<string>>;
+};
+
+const CreateProductForm = ({ setRefetch, setActiveTab }: CreateProductProp) => {
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [newProduct, setNewProduct] = useState({
+  const [isMultiSize, setMultiSize] = useState<boolean>(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const [newProduct, setNewProduct] = useState<InputProduct>({
     name: "",
     description: "",
-    price: "",
-    category_id: "",
-    images: [""],
     barcode: "",
-    stock_quantity: "",
+    stock_quantity: 0,
+    price: 0,
+    category_id: "",
+    isFeatured: false,
   });
+  const [newSizes, setNewSizes] = useState<InputSize[]>([
+    {
+      size: "",
+      stock_quantity: 0,
+    },
+  ]);
 
-  const createProduct = async (productData: InputProduct) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent the default form submission behavior
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await axios.post(`${apiURL}/products`, productData, {
-        withCredentials: true,
+      if (files.length < 0) {
+        toast.error("Must be upload image");
+        return;
+      }
+      const urls = await handleImageUpload(files);
+      const res = await axiosInstance.post("/products", {
+        newProduct,
+        urls,
+        newSizes,
       });
-
       if (res.status === 200) {
         toast.success("Product created successfully");
       }
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      toast.error("An error occured, please try again");
-    }
-  };
-  const getCategories = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`${apiURL}/category`, {
-        withCredentials: true,
-      });
-      if (res.status === 200) {
-        setCategories(res.data);
-      }
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      toast.error("An error occured, please try again");
-    }
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      await createProduct(newProduct);
+      setRefetch((prev: boolean) => !prev);
+      setActiveTab("products");
       setNewProduct({
         name: "",
         description: "",
-        price: "",
-        category_id: "",
-        images: [],
         barcode: "",
-        stock_quantity: "",
+        stock_quantity: 0,
+        price: 0,
+        category_id: "",
+        isFeatured: false,
       });
-    } catch {
-      console.log("error creating a product");
-    }
-  };
-  useEffect(() => {
-    getCategories();
-  }, []);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files; // FileList object
-    if (files) {
-      const fileArray = Array.from(files); // Convert FileList to an array
-      const newImages: string[] = []; // To store base64 image data
-
-      fileArray.forEach((file) => {
-        const reader = new FileReader();
-
-        reader.onloadend = () => {
-          if (typeof reader.result === "string") {
-            newImages.push(reader.result);
-
-            if (newImages.length === fileArray.length) {
-              setNewProduct({ ...newProduct, images: newImages });
-            }
-          }
-        };
-
-        reader.readAsDataURL(file);
-      });
-    } else {
-      console.log("No files selected");
+      setFiles([]);
+      setImagePreviews([]);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error("Error submitting product:", error);
+      toast.error("Failed to create product. Please try again.");
     }
   };
 
   return (
     <motion.div
-      className="bg-gray-800 shadow-lg rounded-lg p-8 mb-8 max-w-xl mx-auto"
+      className="bg-gray-800 shadow-lg rounded-lg p-8 mb-8 max-w-4xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
@@ -112,164 +88,59 @@ const CreateProductForm = () => {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Product Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={newProduct.name}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, name: e.target.value })
-            }
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
-						 px-3 text-white focus:outline-none focus:ring-2
-						focus:ring-emerald-500 focus:border-emerald-500"
-            required
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="barcode"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Product barcode
-          </label>
-          <input
-            type="number"
-            id="barcode"
-            name="barcode"
-            value={newProduct.barcode}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, barcode: e.target.value })
-            }
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
-						 px-3 text-white focus:outline-none focus:ring-2
-						focus:ring-emerald-500 focus:border-emerald-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={newProduct.description}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, description: e.target.value })
-            }
-            rows={3}
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm
+        <div className="flex gap-6 justify-between">
+          <ProductForm newProduct={newProduct} setNewProduct={setNewProduct} />
+          <div className="flex-1">
+            <label
+              htmlFor="description"
+              className=" text-sm font-medium text-gray-300"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={newProduct.description}
+              onChange={(e) =>
+                setNewProduct({ ...newProduct, description: e.target.value })
+              }
+              rows={12}
+              className=" w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm
 						 py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 
 						 focus:border-emerald-500"
-            required
+              required
+            />
+          </div>
+        </div>
+        <div className="mb-2 flex items-center space-x-4">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={isMultiSize}
+            onChange={(e) => setMultiSize(e.target.checked)}
+            className="appearance-none w-4 h-4 border-4 border-gray-600 rounded-full bg-gray-700 checked:bg-emerald-600 checked:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-300 ease-in-out"
           />
+          <label
+            htmlFor="terms"
+            className="text-sm font-medium text-gray-300 cursor-pointer hover:text-emerald-300 transition duration-200"
+          >
+            Multi sizes?
+          </label>
         </div>
 
-        <div>
-          <label
-            htmlFor="price"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Price
-          </label>
-          <input
-            type="number"
-            id="price"
-            name="price"
-            value={newProduct.price}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, price: e.target.value })
-            }
-            step="0.01"
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm 
-						py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500
-						 focus:border-emerald-500"
-            required
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="stock_quantity"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Stock quantity
-          </label>
-          <input
-            type="number"
-            id="stock_quantity"
-            name="stock_quantity"
-            value={newProduct.stock_quantity}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, stock_quantity: e.target.value })
-            }
-            step="0.01"
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm 
-						py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500
-						 focus:border-emerald-500"
-            required
-          />
-        </div>
+        {isMultiSize && (
+          <div>
+            <SizeInputForm newSizes={newSizes} setNewSizes={setNewSizes} />
+          </div>
+        )}
 
-        <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-300"
-          >
-            Category
-          </label>
-          <select
-            id="category"
-            name="category"
-            value={newProduct.category_id}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, category_id: e.target.value })
-            }
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md
-						 shadow-sm py-2 px-3 text-white focus:outline-none 
-						 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            required
-          >
-            <option value="">Select a category</option>
-            {categories.map((category, idx) => (
-              <option key={idx} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mt-1 flex items-center">
-          <input
-            type="file"
-            id="image"
-            className="sr-only"
-            accept="image/*"
-            onChange={handleImageChange}
+        <div className="mt-1">
+          <ImageInput
+            imagePreviews={imagePreviews}
+            setImagePreviews={setImagePreviews}
+            setFiles={setFiles}
+            files={files}
           />
-          <label
-            htmlFor="image"
-            className="cursor-pointer bg-gray-700 py-2 px-3 border border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-          >
-            <Upload className="h-5 w-5 inline-block mr-2" />
-            Upload Image
-          </label>
-          {newProduct.images.length > 0 && (
-            <span className="ml-3 text-sm text-gray-400">
-              {newProduct.images.length} image(s) uploaded
-            </span>
-          )}
         </div>
 
         <button
@@ -298,4 +169,5 @@ const CreateProductForm = () => {
     </motion.div>
   );
 };
+
 export default CreateProductForm;

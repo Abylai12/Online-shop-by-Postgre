@@ -5,7 +5,24 @@ import { sql } from "../config/connect-to-tb";
 
 export const getAllProducts = async (_: Request, res: Response) => {
   try {
-    const products = await sql`SELECT * FROM products`;
+    const products = await sql`
+    SELECT 
+      p.id,
+      p.name AS product_name,
+      p.description,
+      p.stock_quantity,
+      p.price,
+      p.images,
+      p.created_at,
+      p.updated_at,
+      c.name AS category_name,
+      p.isFeatured
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    ORDER BY p.created_at DESC;
+  `;
+
+    console.log("products");
     res.status(200).json({ products });
   } catch (error) {
     console.log("Error in getAllProducts controller", error);
@@ -14,7 +31,6 @@ export const getAllProducts = async (_: Request, res: Response) => {
 };
 
 export const getFeaturedProducts = async (_: Request, res: Response) => {
-  //   let featuredProducts: Products | null = null;
   try {
     const redisFeaturedProducts = await redis.get("featured_products");
     if (redisFeaturedProducts) {
@@ -28,11 +44,7 @@ export const getFeaturedProducts = async (_: Request, res: Response) => {
     if (!featuredProducts) {
       throw new Error("No featured products found");
     }
-
-    // store in redis for future quick access
-
     await redis.set("featured_products", JSON.stringify(featuredProducts));
-
     res.status(200).json(featuredProducts);
   } catch (error) {
     console.log("Error in getFeaturedProducts controller", error);
@@ -41,51 +53,46 @@ export const getFeaturedProducts = async (_: Request, res: Response) => {
 };
 
 export const createProduct = async (req: Request, res: Response) => {
-  const {
-    name,
-    description,
-    barcode,
-    stock_quantity,
-    price,
-    images,
-    category,
-  } = req.body;
-
+  const { newProduct, urls, newSizes } = req.body;
   try {
-    let uploadedImagesUrls: string[] = [];
-
-    if (images && images.length > 0) {
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-
-        const cloudinaryResponse = await cloudinary.uploader.upload(image, {
-          folder: "products",
-        });
-        uploadedImagesUrls.push(cloudinaryResponse.secure_url);
-      }
-    }
-
-    const newProduct = {
+    const {
       name,
       description,
       barcode,
       stock_quantity,
       price,
-      images: uploadedImagesUrls, // Store Cloudinary URLs in the database
-      category,
-    };
+      category_id,
+      isFeatured,
+    } = newProduct;
 
-    const [product] = await sql`
-      INSERT INTO products (name, description, barcode, stock_quantity, stock_buy_price, price, images, category)
-      VALUES (${newProduct.name}, ${newProduct.description}, ${
-      newProduct.barcode
-    }, ${newProduct.stock_quantity}, ${newProduct.price},${
-      newProduct.price
-    }, ${JSON.stringify(newProduct.images)}, ${newProduct.category})
-      RETURNING *;
-    `;
+    const query = isFeatured
+      ? sql`
+    INSERT INTO products (name, description, barcode, stock_quantity, stock_buy_price, price, images, category_id, isFeatured)
+    VALUES (${name}, ${description}, ${barcode}, ${stock_quantity}, ${price},${price}, ${urls},${category_id}, ${isFeatured})
+    RETURNING *;
+  `
+      : sql`
+    INSERT INTO products (name, description, barcode, stock_quantity, stock_buy_price, price, images, category_id)
+    VALUES (${name}, ${description}, ${barcode}, ${stock_quantity}, ${price},${price}, ${urls}, ${category_id})
+    RETURNING *;
+  `;
 
-    res.status(201).json({ message: "Product created successfully", product });
+    const product = await query;
+
+    const productId = product[0].id;
+    console.log("product_id", productId);
+    console.log("sizes", newSizes);
+    if (newSizes.length > 0) {
+      const sizeInsertPromises = newSizes.map(
+        (size: { size: string; stock_quantity: number; price: number }) => {
+          return sql`
+          INSERT INTO product_sizes (product_id, size, stock_quantity)
+          VALUES (${productId}, ${size.size}, ${size.stock_quantity});`;
+        }
+      );
+      await Promise.all(sizeInsertPromises);
+    }
+    res.status(200).json({ message: "Product created successfully", product });
   } catch (error) {
     console.error("Error uploading images or creating product", error);
     res.status(500).json({ message: "Error creating product", error });
@@ -157,8 +164,14 @@ export const toggleFeaturedProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const [product] = await sql`SELECT * FROM products WHERE id=${id}`;
     if (product) {
-      product.isFeatured = !product.isFeatured;
-      const updatedProduct = await product.save();
+      console.log("update", product.isfeatured);
+      const updatedIsFeatured = !product.isfeatured;
+      const updatedProduct = await sql`
+      UPDATE products
+      SET isFeatured = ${updatedIsFeatured}
+      WHERE id = ${id}
+      RETURNING *;
+    `;
       await updateFeaturedProductsCache();
       res.json(updatedProduct);
     } else {

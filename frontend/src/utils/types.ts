@@ -11,19 +11,24 @@ export type Products = {
   description: string;
   price: string;
   stock_quantity: number;
-  category_id: string;
+  category_name: string;
   images: string[];
-  isFeatured: boolean;
+  isfeatured: boolean;
 };
 
 export type InputProduct = {
   barcode: string;
   name: string;
   description: string;
-  price: string;
-  stock_quantity: string;
+  price: number;
+  stock_quantity: number;
   category_id: string;
-  images: string[];
+  isFeatured: boolean;
+};
+
+export type InputSize = {
+  size: string;
+  stock_quantity: number;
 };
 
 export type Carts = {

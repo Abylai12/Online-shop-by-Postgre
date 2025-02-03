@@ -1,22 +1,27 @@
 "use client";
-import { apiURL } from "@/utils/apiURL";
+import axiosInstance from "@/utils/axios-instance";
 import { Products } from "@/utils/types";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { Trash, Star } from "lucide-react";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { toast } from "react-toastify";
 
-const ProductsList = ({ products }: { products: Products[] }) => {
+type ProductListProp = {
+  setRefetch: Dispatch<SetStateAction<boolean>>;
+  products: Products[];
+};
+
+const ProductsList = ({ products, setRefetch }: ProductListProp) => {
   const [loading, setLoading] = useState(false);
 
   const deleteProduct = async (productId: string) => {
     try {
       setLoading(true);
-      const res = await axios.delete(`${apiURL}/products/${productId}`);
+      const res = await axiosInstance.delete(`/products/${productId}`);
       if (res.status === 200) {
         toast.success("Product deleted successfully");
       }
+      setRefetch((pre) => !pre);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -26,18 +31,19 @@ const ProductsList = ({ products }: { products: Products[] }) => {
   const toggleFeaturedProduct = async (productId: string) => {
     try {
       setLoading(true);
-      const res = await axios.patch(`${apiURL}/products/${productId}`);
+      const res = await axiosInstance.patch(`/products/${productId}`);
       if (res.status === 200) {
-        toast.success("Product updated successfully");
+        toast.success("Product updated successfully", {
+          autoClose: 1000,
+        });
       }
+      setRefetch((pre) => !pre);
       setLoading(false);
     } catch (error) {
       setLoading(false);
       toast.error("Failed to update product");
     }
   };
-
-  console.log("products", products);
 
   return (
     <motion.div
@@ -107,7 +113,7 @@ const ProductsList = ({ products }: { products: Products[] }) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-300">
-                  {product.category_id}
+                  {product.category_name}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -115,7 +121,7 @@ const ProductsList = ({ products }: { products: Products[] }) => {
                   disabled={loading}
                   onClick={() => toggleFeaturedProduct(product.id)}
                   className={`p-1 rounded-full ${
-                    product.isFeatured
+                    product.isfeatured
                       ? "bg-yellow-400 text-gray-900"
                       : "bg-gray-600 text-gray-300"
                   } hover:bg-yellow-500 transition-colors duration-200`}
