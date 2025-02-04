@@ -51,7 +51,6 @@ const SignUpPage = () => {
   };
 
   const onSubmit = (data: z.infer<typeof signupSchema>) => {
-    console.log("Form data submitted:", data);
     signup(data);
   };
 

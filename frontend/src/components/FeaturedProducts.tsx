@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { Products } from "@/utils/types";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { apiURL } from "@/utils/apiURL";
+
+import axiosInstance from "@/utils/axios-instance";
+import Link from "next/link";
 
 const FeaturedProducts = ({
   featuredProducts,
@@ -14,18 +15,15 @@ const FeaturedProducts = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(4);
-  const [loading, setLoading] = useState<boolean>(false);
+  // const [loading, setLoading] = useState<boolean>(false);
 
-  const addToCart = async (id: string) => {
+  const addToWishlist = async (id: string) => {
     try {
-      setLoading(true);
-      const res = await axios.post(`${apiURL}/cart`, { productId: id });
+      const res = await axiosInstance.post("/wishlist", { productId: id });
       if (res.status === 200) {
-        toast.success("Product added to cart");
+        toast.success(res.data.message, { autoClose: 1000 });
       }
-      setLoading(false);
     } catch (error) {
-      setLoading(false);
       toast.error("An error occurred");
     }
   };
@@ -75,32 +73,32 @@ const FeaturedProducts = ({
                   key={product.id}
                   className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2"
                 >
-                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30">
-                    <div className="overflow-hidden">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-48 object-cover transition-transform duration-300 ease-in-out hover:scale-110"
-                      />
+                  <Link href={`/detail/${product.id}`}>
+                    <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30">
+                      <div className="overflow-hidden">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-48 object-cover transition-transform duration-300 ease-in-out hover:scale-110"
+                        />
+                      </div>
+                      <div className="px-4">
+                        <h3 className="text-lg font-semibold mb-2 text-white">
+                          {product.name}
+                        </h3>
+                        <p className="text-emerald-300 font-medium">
+                          ${product.price}
+                        </p>
+                        <button onClick={() => addToWishlist(product.id)}>
+                          <Heart
+                            size={22}
+                            strokeWidth={1}
+                            className="absolute top-4 right-4 hover:fill-inherit"
+                          />
+                        </button>
+                      </div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-2 text-white">
-                        {product.name}
-                      </h3>
-                      <p className="text-emerald-300 font-medium mb-4">
-                        ${product.price}
-                      </p>
-                      <button
-                        disabled={loading}
-                        onClick={() => addToCart(product.id)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
-												flex items-center justify-center"
-                      >
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

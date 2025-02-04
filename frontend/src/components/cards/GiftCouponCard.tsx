@@ -1,15 +1,14 @@
+import { useCart } from "@/context/CartContext";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useCartStore } from "../stores/useCartStore";
 
 const GiftCouponCard = () => {
   const [userInputCode, setUserInputCode] = useState("");
-  const { coupon, isCouponApplied, applyCoupon, getMyCoupon, removeCoupon } =
-    useCartStore();
 
+  const { getMyCoupon, applyCoupon, coupon, isCouponApplied } = useCart();
   useEffect(() => {
     getMyCoupon();
-  }, [getMyCoupon]);
+  }, []);
 
   useEffect(() => {
     if (coupon) setUserInputCode(coupon.code);
@@ -20,10 +19,10 @@ const GiftCouponCard = () => {
     applyCoupon(userInputCode);
   };
 
-  const handleRemoveCoupon = async () => {
-    await removeCoupon();
-    setUserInputCode("");
-  };
+  // const handleRemoveCoupon = async () => {
+  //   await removeCoupon();
+  //   setUserInputCode("");
+  // };
 
   return (
     <motion.div
@@ -68,7 +67,7 @@ const GiftCouponCard = () => {
           <h3 className="text-lg font-medium text-gray-300">Applied Coupon</h3>
 
           <p className="mt-2 text-sm text-gray-400">
-            {coupon.code} - {coupon.discountPercentage}% off
+            {coupon.code} - {coupon.discount_percentage}% off
           </p>
 
           <motion.button
@@ -78,7 +77,7 @@ const GiftCouponCard = () => {
              focus:ring-4 focus:ring-red-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handleRemoveCoupon}
+            onClick={() => console.log("hi")}
           >
             Remove Coupon
           </motion.button>
@@ -91,7 +90,7 @@ const GiftCouponCard = () => {
             Your Available Coupon:
           </h3>
           <p className="mt-2 text-sm text-gray-400">
-            {coupon.code} - {coupon.discountPercentage}% off
+            {coupon.code} - {coupon.discount_percentage}% off
           </p>
         </div>
       )}

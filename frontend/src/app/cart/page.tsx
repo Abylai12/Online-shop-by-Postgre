@@ -1,11 +1,15 @@
 "use client";
 
+import GiftCouponCard from "@/components/cards/GiftCouponCard";
 import CartItem from "@/components/items/CartItem";
+import OrderSummary from "@/components/purchase/OrderSummary";
+import { useCart } from "@/context/CartContext";
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
 
 const CartPage = () => {
-  const { cart } = useCartStore();
+  const { carts } = useCart();
 
   return (
     <div className="py-8 md:py-16">
@@ -17,19 +21,18 @@ const CartPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {cart.length === 0 ? (
+            {carts.length === 0 ? (
               <EmptyCartUI />
             ) : (
               <div className="space-y-6">
-                {cart.map((item) => (
-                  <CartItem key={item._id} item={item} />
+                {carts.map((item) => (
+                  <CartItem key={item.id} item={item} />
                 ))}
               </div>
             )}
-            {cart.length > 0 && <PeopleAlsoBought />}
           </motion.div>
 
-          {cart.length > 0 && (
+          {carts.length > 0 && (
             <motion.div
               className="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-full"
               initial={{ opacity: 0, x: 20 }}
@@ -61,7 +64,7 @@ const EmptyCartUI = () => (
     </p>
     <Link
       className="mt-4 rounded-md bg-emerald-500 px-6 py-2 text-white transition-colors hover:bg-emerald-600"
-      to="/"
+      href="/"
     >
       Start Shopping
     </Link>

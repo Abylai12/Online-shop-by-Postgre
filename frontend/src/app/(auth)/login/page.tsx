@@ -29,8 +29,6 @@ const LoginPage = () => {
 
       switch (res.status) {
         case 200:
-          console.log("resdata", res.data);
-          console.log("res", res);
           toast.success("User successfully signed in");
           router.push("/home");
           break;
@@ -53,7 +51,6 @@ const LoginPage = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(email, password);
     logInUser(email, password);
   };
 

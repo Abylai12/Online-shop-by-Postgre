@@ -1,19 +1,14 @@
+import { Category } from "@/utils/types";
 import Link from "next/link";
-
-type Category = {
-  href: string;
-  name: string;
-  imageUrl: string;
-};
 
 const CategoryItem = ({ category }: { category: Category }) => {
   return (
     <div className="relative overflow-hidden h-96 w-full rounded-lg group">
-      <Link href={"/category" + category.href}>
+      <Link href={`/category/${category.id}`}>
         <div className="w-full h-full cursor-pointer">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-50 z-10" />
           <img
-            src={category.imageUrl}
+            src={category.category_image}
             alt={category.name}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
             loading="lazy"
