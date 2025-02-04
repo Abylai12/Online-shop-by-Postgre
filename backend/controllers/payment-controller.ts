@@ -7,6 +7,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const { products, couponCode } = req.body;
     const { id } = req.user;
+    console.log("id", products);
 
     if (!Array.isArray(products) || products.length === 0) {
       throw new Error("Invalid or empty products array");
@@ -23,7 +24,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
           currency: "usd",
           product_data: {
             name: product.name,
-            images: [product.image],
+            images: [product.images[0]],
           },
           unit_amount: amount,
         },
@@ -44,6 +45,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         );
       }
     }
+    console.log("line items", lineItems);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -63,13 +65,14 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         couponCode: couponCode || "",
         products: JSON.stringify(
           products.map((p) => ({
-            id: p.id,
+            id: p.productId,
             quantity: p.quantity,
             price: p.price,
           }))
         ),
       },
     });
+    console.log("total amount", totalAmount);
 
     if (totalAmount >= 20000) {
       await createNewCoupon(id);
@@ -159,10 +162,14 @@ const createStripeCoupon = async (discountPercentage: number) => {
 const createNewCoupon = async (userId: string) => {
   await sql`DELETE FROM coupons WHERE user_id=${userId} `;
 
-  const newCoupon =
-    await sql`INSERT INTO coupons (code, discount_percentage, valid_until, user_id) VALUES (${
-      "GIFT" + Math.random().toString(36).substring(2, 8).toUpperCase()
-    } , 10, ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}) `;
+  const newCoupon = await sql`
+  INSERT INTO coupons (code, discount_percentage, valid_until, user_id)
+  VALUES (
+    ${"GIFT" + Math.random().toString(36).substring(2, 8).toUpperCase()},
+    10,
+    ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()},
+    ${userId} 
+  )`;
 
   return newCoupon;
 };

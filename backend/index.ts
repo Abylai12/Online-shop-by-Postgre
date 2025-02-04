@@ -10,6 +10,7 @@ import couponRoutes from "./routes/coupon-route";
 import paymentRoutes from "./routes/payment-route";
 import productRoutes from "./routes/product-route";
 import categoryRoutes from "./routes/category-route";
+import wishlistRoutes from "./routes/wishlist-route";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use("/api/v1/coupons", couponRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/category", categoryRoutes);
+app.use("/api/v1/wishlist", wishlistRoutes);
 
 app.listen(PORT, () => {
   console.log(`Сервер localhost:${PORT} дээр аслаа`);

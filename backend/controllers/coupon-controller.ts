@@ -4,7 +4,7 @@ import { sql } from "../config/connect-to-tb";
 export const getCoupon = async (req: Request, res: Response) => {
   try {
     const { id } = req.user;
-    const coupon =
+    const [coupon] =
       await sql`SELECT * FROM coupons WHERE user_id=${id} AND isActive=${true}`;
     res.status(200).json(coupon || null);
   } catch (error) {
