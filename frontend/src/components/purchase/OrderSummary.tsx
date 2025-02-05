@@ -12,7 +12,7 @@ const stripePromise = loadStripe(
 );
 
 const OrderSummary = () => {
-  const { coupon, isCouponApplied, carts } = useCart();
+  const { coupon, isCouponApplied, carts, setRefetch } = useCart();
   const { subtotal, total } = calculateTotals(carts, coupon);
 
   const savings = subtotal - total;
@@ -31,6 +31,7 @@ const OrderSummary = () => {
     const result = await stripe?.redirectToCheckout({
       sessionId: session.id,
     });
+    setRefetch((prev) => !prev);
 
     if (result?.error) {
       console.error("Error:", result.error);

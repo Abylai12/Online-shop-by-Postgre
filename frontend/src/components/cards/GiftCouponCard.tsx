@@ -1,14 +1,17 @@
 import { useCart } from "@/context/CartContext";
+import axiosInstance from "@/utils/axios-instance";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const GiftCouponCard = () => {
   const [userInputCode, setUserInputCode] = useState("");
 
-  const { getMyCoupon, applyCoupon, coupon, isCouponApplied } = useCart();
+  const { getMyCoupon, applyCoupon, coupon, isCouponApplied, setRefetch } =
+    useCart();
   useEffect(() => {
     getMyCoupon();
-  }, []);
+  }, [coupon]);
 
   useEffect(() => {
     if (coupon) setUserInputCode(coupon.code);
@@ -21,8 +24,17 @@ const GiftCouponCard = () => {
 
   // const handleRemoveCoupon = async () => {
   //   await removeCoupon();
-  //   setUserInputCode("");
+  //
   // };
+  const removeCoupon = async (code: string) => {
+    try {
+      await axiosInstance.post("/coupons/unvalidate", { code });
+      setUserInputCode("");
+      setRefetch((pre) => !pre);
+    } catch (error) {
+      toast.error("Coupon expired");
+    }
+  };
 
   return (
     <motion.div
@@ -77,7 +89,7 @@ const GiftCouponCard = () => {
              focus:ring-4 focus:ring-red-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => console.log("hi")}
+            onClick={() => removeCoupon(coupon.code)}
           >
             Remove Coupon
           </motion.button>

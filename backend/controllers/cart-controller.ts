@@ -43,6 +43,7 @@ export const addToCart = async (req: Request, res: Response) => {
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
     const { cartId } = req.body;
+    console.log(cartId);
     const deletedCart = await sql`DELETE FROM user_carts WHERE id=${cartId}`;
     res
       .status(200)
@@ -64,6 +65,19 @@ export const updateQuantity = async (req: Request, res: Response) => {
       .json({ message: "Product updated successfully", updateCart });
   } catch (error) {
     console.log("Error in updateQuantity controller", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const removeAllFromCart = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.user;
+
+    const deletedCart = await sql`DELETE FROM user_carts WHERE user_id=${id}`;
+    res
+      .status(200)
+      .json({ message: "Product deleted successfully", deletedCart });
+  } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 };

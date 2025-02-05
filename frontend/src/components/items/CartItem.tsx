@@ -8,9 +8,10 @@ import { useCart } from "@/context/CartContext";
 const CartItem = ({ item }: { item: Carts }) => {
   const [quantity, setQuantity] = useState(item.quantity);
   const { setRefetch } = useCart();
-  const removeFromCart = async (productId: string) => {
+  const removeFromCart = async (cartId: string) => {
     try {
-      await axiosInstance.delete(`/carts`, { data: { productId } });
+      await axiosInstance.delete(`/cart`, { data: { cartId } });
+      setRefetch((prev) => !prev);
       toast.success("Deleted successfully", { autoClose: 1000 });
     } catch (error) {
       console.error(error);

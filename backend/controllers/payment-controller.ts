@@ -7,8 +7,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const { products, couponCode } = req.body;
     const { id } = req.user;
-    console.log("id", products);
-
     if (!Array.isArray(products) || products.length === 0) {
       throw new Error("Invalid or empty products array");
     }
@@ -37,7 +35,15 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       const [couponRows] = await sql`
         SELECT * FROM coupons WHERE user_id = ${id} AND isActive = true AND code = ${couponCode}
       `;
-      coupon = couponRows.length > 0 ? couponRows[0] : null;
+      if (couponRows) {
+        coupon = {
+          user_id: couponRows.user_id,
+          code: couponRows.code,
+          discount_percentage: couponRows.discount_percentage,
+          valid_from: couponRows.valid_from,
+          valid_until: couponRows.valid_until,
+        };
+      }
 
       if (coupon) {
         totalAmount -= Math.round(
@@ -45,7 +51,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         );
       }
     }
-    console.log("line items", lineItems);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -65,14 +70,13 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         couponCode: couponCode || "",
         products: JSON.stringify(
           products.map((p) => ({
-            id: p.productId,
+            id: p.productid,
             quantity: p.quantity,
             price: p.price,
           }))
         ),
       },
     });
-    console.log("total amount", totalAmount);
 
     if (totalAmount >= 20000) {
       await createNewCoupon(id);
@@ -91,13 +95,12 @@ export const checkoutSuccess = async (req: Request, res: Response) => {
 
     if (session.payment_status === "paid" && session.metadata) {
       if (session.metadata.couponCode) {
-        await sql`UPDATE coupons SET isActive=${false} WHERE user_id=${
+        await sql`UPDATE coupons SET isactive=${false} WHERE user_id=${
           session.metadata?.userId
         } AND code=${session.metadata?.couponCode} `;
       }
 
       const products = JSON.parse(session.metadata.products);
-
       const [orderDeliveryStatus] = await sql`
       INSERT INTO order_statuses (status) 
       VALUES ('pending') 
@@ -105,13 +108,12 @@ export const checkoutSuccess = async (req: Request, res: Response) => {
     `;
 
       const [newOrder] = await sql`
-      INSERT INTO orders (user_id, status_id, total_amount) 
+      INSERT INTO orders (user_id, status_id, total_amount, stripesessionid) 
       VALUES (${session.metadata.userId}, ${orderDeliveryStatus.id}, ${
         session.amount_total! / 100
-      })
+      }, ${sessionId})
       RETURNING id
     `;
-
       const newItems = products.map((product: OrderItems) => ({
         order_id: newOrder.id,
         product_id: product.id,
@@ -166,7 +168,7 @@ const createNewCoupon = async (userId: string) => {
   INSERT INTO coupons (code, discount_percentage, valid_until, user_id)
   VALUES (
     ${"GIFT" + Math.random().toString(36).substring(2, 8).toUpperCase()},
-    10,
+    5,
     ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()},
     ${userId} 
   )`;
