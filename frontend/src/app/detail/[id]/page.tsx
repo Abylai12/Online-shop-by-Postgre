@@ -7,9 +7,8 @@ import DetailCart from "@/components/cart/DetailCart";
 import ProductCard from "@/components/cards/ProductCard";
 
 const ProductDetailPage = () => {
-  const [detail, setDetail] = useState<DetailProduct | null>(null);
   const [products, setProducts] = useState<Products[]>([]);
-
+  const [detail, setDetail] = useState<DetailProduct | null>(null);
   const { id } = useParams();
   const getProductDetail = async () => {
     try {

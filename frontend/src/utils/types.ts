@@ -21,7 +21,6 @@ export type DetailProduct = {
   name: string;
   description: string;
   price: string;
-  stock_quantity: number;
   category_name: string;
   images: string[];
   product_discount: number;
@@ -51,7 +50,11 @@ export type Carts = {
   name: string;
   description: string;
   price: number;
+  size: string | null;
   images: string[];
+  size_quantity: number;
+  stock_quantity: number;
+  productsizeid: string;
 };
 export type Coupon = {
   id: string;

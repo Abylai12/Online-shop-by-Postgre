@@ -32,6 +32,7 @@ const GiftCouponCard = () => {
       setUserInputCode("");
       setRefetch((pre) => !pre);
     } catch (error) {
+      console.error(error);
       toast.error("Coupon expired");
     }
   };

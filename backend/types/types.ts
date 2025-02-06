@@ -18,6 +18,8 @@ export interface OrderItems {
   order_id: string;
   quantity: number;
   price: number;
+  size: string;
+  productSizeId: string;
 }
 
 export type Products = {

@@ -24,6 +24,7 @@ const FeaturedProducts = ({
         toast.success(res.data.message, { autoClose: 1000 });
       }
     } catch (error) {
+      console.error(error);
       toast.error("An error occurred");
     }
   };

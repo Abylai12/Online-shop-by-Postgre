@@ -13,7 +13,7 @@ const PurchaseSuccessPage = () => {
   const sessionId = searchParams.get("session_id");
   const [isProcessing, setIsProcessing] = useState(true);
 
-  const { removeAllCartItems, setRefetch } = useCart();
+  const { removeAllCartItems } = useCart();
   const handleCheckoutSuccess = async (sessionId: string) => {
     try {
       await axiosInstance.post("/payments/checkout-session", {

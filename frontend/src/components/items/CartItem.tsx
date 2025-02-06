@@ -8,6 +8,9 @@ import { useCart } from "@/context/CartContext";
 const CartItem = ({ item }: { item: Carts }) => {
   const [quantity, setQuantity] = useState(item.quantity);
   const { setRefetch } = useCart();
+
+  const availableStock = item.size_quantity || item.stock_quantity;
+
   const removeFromCart = async (cartId: string) => {
     try {
       await axiosInstance.delete(`/cart`, { data: { cartId } });
@@ -21,7 +24,8 @@ const CartItem = ({ item }: { item: Carts }) => {
 
   const updateQuantity = async (cartId: string, newQuantity: number) => {
     try {
-      if (newQuantity < 1) return;
+      if (newQuantity < 1 || newQuantity > availableStock) return;
+
       setQuantity(newQuantity);
       await axiosInstance.put(`/cart`, { quantity: newQuantity, cartId });
       setRefetch((prev) => !prev);
@@ -32,63 +36,64 @@ const CartItem = ({ item }: { item: Carts }) => {
   };
 
   return (
-    <div className="rounded-lg border p-4 shadow-sm border-gray-700 bg-gray-800 md:p-6">
-      <div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
-        <div className="shrink-0 md:order-1">
+    <div className="bg-gray-800 rounded-lg shadow-md p-4 md:p-6 space-y-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="w-20 md:w-32 flex-shrink-0">
           <img
-            className="h-20 md:h-32 rounded object-cover"
+            className="h-full w-full object-cover rounded-lg"
             src={item.images[0]}
+            alt={item.name}
           />
         </div>
-        <label className="sr-only">Choose quantity:</label>
 
-        <div className="flex items-center justify-between md:order-3 md:justify-end">
-          <div className="flex items-center gap-2">
-            <button
-              className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border
-							 border-gray-600 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2
-							  focus:ring-emerald-500"
-              onClick={() => updateQuantity(item.id, quantity - 1)}
-              disabled={quantity <= 1}
-            >
-              <Minus className="text-gray-300" />
-            </button>
-            <p>{quantity}</p>
-            <button
-              className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border
-							 border-gray-600 bg-gray-700 hover:bg-gray-600 focus:outline-none 
-						focus:ring-2 focus:ring-emerald-500"
-              onClick={() => updateQuantity(item.id, quantity + 1)}
-            >
-              <Plus className="text-gray-300" />
-            </button>
-          </div>
-
-          <div className="text-end md:order-4 md:w-32">
-            <p className="text-base font-bold text-emerald-400">
-              ${item.price}
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full min-w-0 flex-1 space-y-4 md:order-2 md:max-w-md">
-          <p className="text-base font-medium text-white hover:text-emerald-400 hover:underline">
+        <div className="flex-1 space-y-2">
+          <p className="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">
             {item.name}
           </p>
           <p className="text-sm text-gray-400">{item.description}</p>
+          {item.size && (
+            <p className="text-sm text-gray-400">Size: {item.size}</p>
+          )}
+        </div>
 
-          <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center space-x-2">
             <button
-              className="inline-flex items-center text-sm font-medium text-red-400
-							 hover:text-red-300 hover:underline"
-              onClick={() => removeFromCart(item.id)}
+              onClick={() => updateQuantity(item.id, quantity - 1)}
+              disabled={quantity <= 1}
+              className="bg-gray-700 text-white hover:bg-gray-600 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <Trash />
+              <Minus />
+            </button>
+            <span className="text-xl font-semibold text-white">{quantity}</span>
+            <button
+              onClick={() => updateQuantity(item.id, quantity + 1)}
+              disabled={quantity >= availableStock}
+              className="bg-gray-700 text-white hover:bg-gray-600 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <Plus />
             </button>
           </div>
+          <p className="text-sm text-gray-300">
+            Available stock: {availableStock}
+          </p>
         </div>
+
+        {/* Price */}
+        <div className="flex flex-col items-end space-y-2">
+          <p className="text-xl font-semibold text-emerald-400">
+            ${item.price}
+          </p>
+        </div>
+        <button
+          onClick={() => removeFromCart(item.id)}
+          className="bg-red-500 text-white hover:bg-red-400 rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          <Trash />
+        </button>
       </div>
     </div>
   );
 };
+
 export default CartItem;

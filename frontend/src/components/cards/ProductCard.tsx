@@ -23,6 +23,7 @@ const ProductCard = ({ product }: { product: Products }) => {
           break;
       }
     } catch (error) {
+      console.error(error);
       toast.error("An error occurred");
     }
   };

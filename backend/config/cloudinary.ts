@@ -13,7 +13,6 @@ export default cloudinary;
 
 const testCloudinaryConnection = async () => {
   try {
-    // Ping the Cloudinary API to verify the connection
     const result = await cloudinary.api.ping();
     console.log("Cloudinary connection successful:", result);
   } catch (error) {

@@ -19,13 +19,14 @@ const CategoryPage = () => {
         setProducts(res.data.products);
       }
     } catch (error) {
+      console.error(error);
       toast.error("Failed to fetch products");
     }
   };
 
   useEffect(() => {
     fetchProductsByCategory();
-  }, [id]);
+  }, []);
 
   return (
     <div className="min-h-screen">

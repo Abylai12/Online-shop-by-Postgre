@@ -4,22 +4,37 @@ import { sql } from "../config/connect-to-tb";
 export const getCartProducts = async (req: Request, res: Response) => {
   try {
     const { id } = req.user;
-    const products =
-      await sql`SELECT p.name, p.id AS productId, p.description, p.images, p.price, uc.quantity, uc.id, uc.added_at
+    const products = await sql`SELECT 
+    p.name, 
+    p.id AS productId, 
+    p.description, 
+    p.images, 
+    p.price, 
+    p.stock_quantity,
+    uc.quantity, 
+    uc.size, 
+    uc.id, 
+    uc.added_at,
+    CASE 
+        WHEN uc.size IS NOT NULL THEN ps.stock_quantity 
+        ELSE NULL 
+    END AS size_quantity,   ps.id AS productSizeId 
 FROM user_carts uc
 JOIN products p ON uc.product_id = p.id
+LEFT JOIN product_sizes ps ON p.id = ps.product_id AND uc.size = ps.size
 WHERE uc.user_id = ${id}
-ORDER BY uc.added_at DESC;
-`;
+ORDER BY uc.added_at DESC`;
+
     res.status(200).json({ products });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
+    console.error(error);
   }
 };
 
 export const addToCart = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, size } = req.body;
     const { id } = req.user;
 
     const [existProduct] =
@@ -30,8 +45,12 @@ export const addToCart = async (req: Request, res: Response) => {
       return;
     }
 
-    const product =
-      await sql`INSERT INTO user_carts (user_id, product_id, quantity) VALUES (${id}, ${productId}, ${quantity})`;
+    const query = sql`
+    INSERT INTO user_carts (user_id, product_id, quantity, size) 
+    VALUES (${id}, ${productId}, ${quantity}, ${size ?? null})
+  `;
+
+    const product = await query;
 
     res.status(200).json({ message: "Product added to cart", product });
   } catch (error) {
@@ -43,7 +62,6 @@ export const addToCart = async (req: Request, res: Response) => {
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
     const { cartId } = req.body;
-    console.log(cartId);
     const deletedCart = await sql`DELETE FROM user_carts WHERE id=${cartId}`;
     res
       .status(200)

@@ -60,6 +60,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         setCarts(res.data.products);
       }
     } catch (error) {
+      console.error(error);
       toast.error("An error occurred");
     }
   };
@@ -89,6 +90,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
           break;
       }
     } catch (error) {
+      console.error(error);
       toast.error("Coupon expired");
     }
   };

@@ -31,13 +31,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const getCurrentUser = async () => {
-    try {
-      const res = await axiosInstance.get("/auth/profile");
-      if (res.status === 200) {
-        setUser(res.data);
-      }
-    } catch (error) {
-      console.error(error);
+    const res = await axiosInstance.get("/auth/profile");
+    if (res.status === 200) {
+      setUser(res.data);
     }
   };
 

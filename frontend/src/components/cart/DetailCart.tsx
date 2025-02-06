@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Heart } from "lucide-react";
 import { DetailProduct } from "@/utils/types";
@@ -15,7 +15,11 @@ const DetailCart = ({ product }: { product: DetailProduct | null }) => {
 
   const addToCart = async (product_id: string) => {
     try {
-      await axiosInstance.post("/cart", { productId: product_id, quantity });
+      await axiosInstance.post("/cart", {
+        productId: product_id,
+        quantity,
+        size,
+      });
       setRefetch((prev) => !prev);
       toast.success("Product added to cart");
     } catch (error) {
@@ -63,7 +67,11 @@ const DetailCart = ({ product }: { product: DetailProduct | null }) => {
       setCurrentImageIndex(productImages.length - 1);
     }
   };
-
+  useEffect(() => {
+    if (product?.total_stock_quantity !== 0 && product) {
+      setStockQuantity(product?.total_stock_quantity);
+    }
+  }, [product]);
   return (
     <section className="text-white mt-10">
       <div className="grid grid-cols-2 gap-5">
@@ -114,19 +122,23 @@ const DetailCart = ({ product }: { product: DetailProduct | null }) => {
           <div className="flex flex-col gap-2 my-4">
             <p className="text-base underline">Size options</p>
             <div className="flex gap-2">
-              {product?.product_sizes.map((item, idx) => (
-                <Button
-                  className={`${
-                    size === item.size
-                      ? "bg-green-500 text-white"
-                      : "bg-transparent text-white border-white"
-                  } rounded-full border w-8 h-8 flex items-center justify-center`}
-                  key={idx}
-                  onClick={() => handleSize(item.size)}
-                >
-                  {item.size}
-                </Button>
-              ))}
+              {product?.total_stock_quantity === 0 ? (
+                product?.product_sizes.map((item, idx) => (
+                  <Button
+                    className={`${
+                      size === item.size
+                        ? "bg-green-500 text-white"
+                        : "bg-transparent text-white border-white"
+                    } rounded-full border w-8 h-8 flex items-center justify-center`}
+                    key={idx}
+                    onClick={() => handleSize(item.size)}
+                  >
+                    {item.size}
+                  </Button>
+                ))
+              ) : (
+                <p> no size option</p>
+              )}
             </div>
 
             <div className="mt-4 flex items-center">
@@ -152,18 +164,28 @@ const DetailCart = ({ product }: { product: DetailProduct | null }) => {
             </div>
 
             <p className="text-sm text-white mt-2">
-              {`Available stock: ${stockQuantity}`}
+              {`Available stock:  ${stockQuantity}`}
             </p>
           </div>
 
           <div className="mt-6 mb-14">
-            <Button
-              className="bg-[#2563EB]"
-              onClick={() => addToCart(product!.id)}
-              disabled={quantity <= 0 || !size}
-            >
-              Add to cart
-            </Button>
+            {product?.total_stock_quantity === 0 ? (
+              <Button
+                className="bg-[#2563EB]"
+                onClick={() => addToCart(product!.id)}
+                disabled={quantity <= 0 || !size}
+              >
+                Add to cart
+              </Button>
+            ) : (
+              <Button
+                className="bg-[#2563EB]"
+                onClick={() => addToCart(product!.id)}
+                disabled={quantity <= 0}
+              >
+                Add to cart
+              </Button>
+            )}
           </div>
         </div>
       </div>

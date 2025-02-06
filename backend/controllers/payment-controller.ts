@@ -14,7 +14,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     let totalAmount = 0;
 
     const lineItems = products.map((product) => {
-      const amount = Math.round(product.price * 100); // stripe wants u to send in the format of cents
+      const amount = Math.round(product.price * 100);
       totalAmount += amount * product.quantity;
 
       return {
@@ -73,6 +73,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
             id: p.productid,
             quantity: p.quantity,
             price: p.price,
+            size: p.size,
+            productSizeId: p.productsizeid,
           }))
         ),
       },
@@ -119,11 +121,11 @@ export const checkoutSuccess = async (req: Request, res: Response) => {
         product_id: product.id,
         quantity: product.quantity,
         price: product.price,
+        size: product.size,
       }));
 
-      // Now insert all the items into the order_items table
       await sql`
-        INSERT INTO order_items (order_id, product_id, quantity, price)
+        INSERT INTO order_items (order_id, product_id, quantity, price, size)
         VALUES
         ${sql(
           newItems.map((item: OrderItems) => [
@@ -131,10 +133,28 @@ export const checkoutSuccess = async (req: Request, res: Response) => {
             item.product_id,
             item.quantity,
             item.price,
+            item.size,
           ])
         )}
         RETURNING *;
       `;
+      const updateStockPromises = products.map(async (product: OrderItems) => {
+        if (product.productSizeId) {
+          return sql`
+            UPDATE product_sizes 
+            SET stock_quantity = stock_quantity - ${product.quantity} 
+            WHERE id = ${product.productSizeId}
+          `;
+        } else {
+          return sql`
+            UPDATE products 
+            SET stock_quantity = stock_quantity - ${product.quantity} 
+            WHERE id = ${product.id}
+          `;
+        }
+      });
+
+      await Promise.all(updateStockPromises);
 
       res.status(200).json({
         success: true,

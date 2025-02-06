@@ -24,6 +24,7 @@ const ProductsList = ({ products, setRefetch }: ProductListProp) => {
       setRefetch((pre) => !pre);
       setLoading(false);
     } catch (error) {
+      console.error(error);
       setLoading(false);
       toast.error("Failed to delete product");
     }
@@ -40,6 +41,7 @@ const ProductsList = ({ products, setRefetch }: ProductListProp) => {
       setRefetch((pre) => !pre);
       setLoading(false);
     } catch (error) {
+      console.error(error);
       setLoading(false);
       toast.error("Failed to update product");
     }
