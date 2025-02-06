@@ -19,7 +19,7 @@ const PORT = process.env.PORT || "";
 const app = express();
 
 const corsOptions = {
-  origin: `${process.env.CLIENT_URL}`, // Allow requests only from your frontend
+  origin: process.env.CLIENT_URL, // Allow requests only from your frontend
   credentials: true, // Allow credentials (cookies or authorization tokens)
 };
 
