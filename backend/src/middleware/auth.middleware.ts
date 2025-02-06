@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { sql } from "../config/connect-to-tb";
 import { User } from "../types/types";
-
 import { decodeToken } from "../utils/decode-token";
 
 declare global {

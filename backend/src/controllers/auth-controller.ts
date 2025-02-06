@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { sql } from "../config/connect-to-tb";
 import bcrypt from "bcrypt";
+
+import { redis } from "../config/redis";
+import jwt from "jsonwebtoken";
 import {
   generateTokens,
   setCookies,
   storeRefreshToken,
 } from "../utils/generate-tokens";
-import { redis } from "../config/redis";
-import jwt from "jsonwebtoken";
 import { decodeTokenRefresh } from "../utils/decode-token";
 
 export const login = async (req: Request, res: Response) => {

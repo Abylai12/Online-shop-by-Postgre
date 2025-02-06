@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { redis } from "../config/redis";
 import dotenv from "dotenv";
 import { Response } from "express";
+import { redis } from "../config/redis";
 
 dotenv.config();
 
