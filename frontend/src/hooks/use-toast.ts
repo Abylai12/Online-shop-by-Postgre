@@ -15,6 +15,13 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement;
 };
 
+let count = 0;
+
+function genId() {
+  count = (count + 1) % Number.MAX_SAFE_INTEGER;
+  return count.toString();
+}
+
 type Action =
   | {
       type: "ADD_TOAST";
@@ -152,13 +159,6 @@ function toast({ ...props }: Toast) {
   };
 }
 
-let count = 0;
-
-function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER;
-  return count.toString();
-}
-
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -178,5 +178,4 @@ function useToast() {
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   };
 }
-
 export { useToast, toast };

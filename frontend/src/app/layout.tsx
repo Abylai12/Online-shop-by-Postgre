@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { Suspense } from "react";
+import { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -34,8 +35,9 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <Navbar />
+            {/* Wrap the content with Suspense */}
             <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
-              {children}
+              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
             </div>
             <ToastContainer />
           </CartProvider>
