@@ -56,6 +56,14 @@ export type Carts = {
   stock_quantity: number;
   productsizeid: string;
 };
+
+export type Wishlist = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+};
 export type Coupon = {
   id: string;
   code: string;

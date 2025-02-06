@@ -8,7 +8,7 @@ import {
   useEffect,
 } from "react";
 import { useState } from "react";
-import { Carts, Coupon } from "@/utils/types";
+import { Carts, Coupon, Wishlist } from "@/utils/types";
 import { toast } from "react-toastify";
 import axiosInstance from "@/utils/axios-instance";
 import { useAuth } from "./AuthContext";
@@ -20,6 +20,7 @@ interface CartContextType {
   applyCoupon: (code: string) => Promise<void>;
   setRefetch: Dispatch<SetStateAction<boolean>>;
   carts: Carts[] | [];
+  wishlist: Wishlist[] | [];
   coupon: Coupon | null;
   isCouponApplied: boolean;
   refetch: boolean;
@@ -32,6 +33,7 @@ export const CartContext = createContext<CartContextType>({
   applyCoupon: async () => {},
   refetch: false,
   carts: [],
+  wishlist: [],
   coupon: null,
   isCouponApplied: false,
 });
@@ -39,6 +41,7 @@ export const CartContext = createContext<CartContextType>({
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [carts, setCarts] = useState<Carts[]>([]);
+  const [wishlist, setWishlist] = useState<Wishlist[]>([]);
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [refetch, setRefetch] = useState(false);
@@ -55,9 +58,24 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getCartItems = async () => {
-    const res = await axiosInstance.get(`/cart`);
-    if (res.status === 200) {
-      setCarts(res.data.products);
+    try {
+      const res = await axiosInstance.get(`/cart`);
+      if (res.status === 200) {
+        setCarts(res.data.products);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getWishlist = async () => {
+    try {
+      const res = await axiosInstance.get(`/wishlist`);
+      if (res.status === 200) {
+        setWishlist(res.data);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
   const getMyCoupon = async () => {
@@ -94,8 +112,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (user) {
       getCartItems();
+      getWishlist();
     }
-  }, [refetch]);
+  }, [refetch, user]);
   return (
     <CartContext.Provider
       value={{
@@ -107,6 +126,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         refetch,
         coupon,
         carts,
+        wishlist,
         isCouponApplied,
       }}
     >

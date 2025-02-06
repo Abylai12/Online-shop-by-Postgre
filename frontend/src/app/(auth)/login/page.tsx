@@ -8,13 +8,14 @@ import axios from "axios";
 import { apiURL } from "@/utils/apiURL";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-
+  const { setUser } = useAuth();
   const logInUser = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -26,9 +27,9 @@ const LoginPage = () => {
         },
         { withCredentials: true }
       );
-
       switch (res.status) {
         case 200:
+          setUser(res.data.user);
           toast.success("User successfully signed in");
           router.push("/home");
           break;
@@ -44,7 +45,7 @@ const LoginPage = () => {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      console.log(error);
+      console.error(error);
       toast.warning("Failed to sign in. Please try again.");
     }
   };

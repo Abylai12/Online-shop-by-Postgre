@@ -27,9 +27,7 @@ export const login = async (req: Request, res: Response) => {
         setCookies(res, accessToken, refreshToken);
 
         res.status(200).json({
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          user: { name: user.name, email: user.email, role: user.role },
         });
       }
     }

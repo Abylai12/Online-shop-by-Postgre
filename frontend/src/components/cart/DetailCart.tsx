@@ -5,6 +5,7 @@ import { DetailProduct } from "@/utils/types";
 import axiosInstance from "@/utils/axios-instance";
 import { toast } from "react-toastify";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const DetailCart = ({ product }: { product: DetailProduct | null }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -12,9 +13,13 @@ const DetailCart = ({ product }: { product: DetailProduct | null }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [stockQuantity, setStockQuantity] = useState<number>(0);
   const { setRefetch } = useCart();
-
+  const { user } = useAuth();
   const addToCart = async (product_id: string) => {
     try {
+      if (!user) {
+        toast.warning("must be logged in");
+        return;
+      }
       await axiosInstance.post("/cart", {
         productId: product_id,
         quantity,

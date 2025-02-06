@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 
 import axiosInstance from "@/utils/axios-instance";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 
 const FeaturedProducts = ({
   featuredProducts,
@@ -15,13 +16,14 @@ const FeaturedProducts = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(4);
-  // const [loading, setLoading] = useState<boolean>(false);
+  const { setRefetch } = useCart();
 
   const addToWishlist = async (id: string) => {
     try {
       const res = await axiosInstance.post("/wishlist", { productId: id });
       if (res.status === 200) {
         toast.success(res.data.message, { autoClose: 1000 });
+        setRefetch((prev) => !prev);
       }
     } catch (error) {
       console.error(error);
@@ -72,7 +74,7 @@ const FeaturedProducts = ({
               {featuredProducts?.map((product) => (
                 <div
                   key={product.id}
-                  className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2"
+                  className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2 relative"
                 >
                   <Link href={`/detail/${product.id}`}>
                     <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30">
@@ -90,16 +92,16 @@ const FeaturedProducts = ({
                         <p className="text-emerald-300 font-medium">
                           ${product.price}
                         </p>
-                        <button onClick={() => addToWishlist(product.id)}>
-                          <Heart
-                            size={22}
-                            strokeWidth={1}
-                            className="absolute top-4 right-4 hover:fill-inherit"
-                          />
-                        </button>
                       </div>
                     </div>
                   </Link>
+                  <button onClick={() => addToWishlist(product.id)}>
+                    <Heart
+                      size={22}
+                      strokeWidth={1}
+                      className="absolute top-4 right-4 hover:fill-inherit"
+                    />
+                  </button>
                 </div>
               ))}
             </div>

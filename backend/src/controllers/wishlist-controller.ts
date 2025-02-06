@@ -23,3 +23,27 @@ export const addToWishlist = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+export const getWishlist = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.user;
+    const wishlist = await sql`
+      SELECT 
+        p.name, 
+        p.id AS productId, 
+        p.description, 
+        p.images, 
+        p.price, 
+        uw.id, 
+        uw.added_at
+      FROM user_wishlist uw
+      JOIN products p ON uw.product_id = p.id
+      WHERE uw.user_id = ${id}
+      ORDER BY uw.added_at DESC
+    `;
+    res.status(200).json(wishlist);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+    console.error(error);
+  }
+};
