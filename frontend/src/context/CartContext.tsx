@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Carts, Coupon } from "@/utils/types";
 import { toast } from "react-toastify";
 import axiosInstance from "@/utils/axios-instance";
+import { useAuth } from "./AuthContext";
 
 interface CartContextType {
   getCartItems: () => void;
@@ -36,6 +37,7 @@ export const CartContext = createContext<CartContextType>({
 });
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
   const [carts, setCarts] = useState<Carts[]>([]);
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -53,15 +55,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getCartItems = async () => {
-    try {
-      const res = await axiosInstance.get(`/cart`);
-
-      if (res.status === 200) {
-        setCarts(res.data.products);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("An error occurred");
+    const res = await axiosInstance.get(`/cart`);
+    if (res.status === 200) {
+      setCarts(res.data.products);
     }
   };
   const getMyCoupon = async () => {
@@ -96,7 +92,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    getCartItems();
+    if (user) {
+      getCartItems();
+    }
   }, [refetch]);
   return (
     <CartContext.Provider

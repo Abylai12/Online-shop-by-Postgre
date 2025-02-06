@@ -7,19 +7,14 @@ const axiosInstance = axios.create({
 });
 
 const refreshToken = async () => {
-  try {
-    const response = await axios.post(
-      `${apiURL}/auth/refresh-token`,
-      {},
-      {
-        withCredentials: true,
-      }
-    );
-    return response.data.accessToken;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
+  const response = await axios.post(
+    `${apiURL}/auth/refresh-token`,
+    {},
+    {
+      withCredentials: true,
+    }
+  );
+  return response.data.accessToken;
 };
 const logout = async () => {
   try {
