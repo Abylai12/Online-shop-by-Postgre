@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(res.data);
       }
     } catch (error) {
+      console.error(error);
       setUser(null);
     } finally {
       setInitialized(true);
